@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-// mount a GraphQL endpoint (needs a schema)
+// mount a GraphQL endpoint
 import schema from './data/schema';
 import GraphQLHTTP from 'express-graphql';
 
@@ -62,4 +62,4 @@ app.use(function(err, req, res, next) {
 });
 
 
-app.listen(3000);
+app.listen(process.env.PORT || 3000);

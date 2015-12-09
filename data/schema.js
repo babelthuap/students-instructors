@@ -24,7 +24,7 @@ let students = [
   {id: 9, firstName: "Sarah", lastName: "Lyon", age: 125, gender: "female", level: 3}
 ];
 
-let LEVELS_ENUM = ["freshman", "sophomore", "junior", "senior"];
+let LEVELS_ENUM = ["FRESHMAN", "SOPHMORE", "JUNIOR", "SENIOR"];
 
 let courses = [
   {id: 101, name: "Skydiving", instructor: 13, students: new Set([7])},
