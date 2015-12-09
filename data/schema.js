@@ -27,14 +27,13 @@ let students = [
 let LEVELS_ENUM = ["freshman", "sophomore", "junior", "senior"];
 
 let courses = [
-  {id: 101, name: "Skydiving", instructor: 13},
-  {id: 102, name: "ReactCamp", instructor: 42}
+  {id: 101, name: "Skydiving", instructor: 13, students: new Set([7])},
+  {id: 102, name: "ReactCamp", instructor: 42, students: new Set([7, 9])}
 ];
 
 let grades = [
   {id: Math.random(), student: 7, course: 101, grade: 0},
   {id: Math.random(), student: 7, course: 102, grade: 2},
-  {id: Math.random(), student: 9, course: 101, grade: 3},
   {id: Math.random(), student: 9, course: 102, grade: 4}
 ];
 
@@ -77,7 +76,11 @@ let instructorType = new GraphQLObjectType({
       resolve: ({firstName, lastName}) => `Professor ${firstName} ${lastName}`
     },
     age: { type: GraphQLInt },
-    gender: { type: GraphQLString }
+    gender: { type: GraphQLString },
+    courses: {
+      type: new GraphQLList(courseType),
+      resolve: ({id}) => courses.findAllByPropValue('instructor', id)
+    }
   })
 });
 
@@ -108,6 +111,10 @@ let studentType = new GraphQLObjectType({
         let GPA = nums.reduce((total, x) => total + x, 0) / nums.length;
         return Number( GPA.toFixed(2) );
       }
+    },
+    courses: {
+      type: new GraphQLList(courseType),
+      resolve: ({id}) => courses.filter(course => course.students.has(id))
     }
   })
 });
