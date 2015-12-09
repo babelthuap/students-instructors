@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 import schema from './data/schema';
 import GraphQLHTTP from 'express-graphql';
 
-app.use('/graphql', GraphQLHTTP({
+app.use('/', GraphQLHTTP({
   schema: schema,
   graphiql: true
 }));
