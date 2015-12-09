@@ -9,140 +9,133 @@ import {
   GraphQLID
 } from 'graphql';
 
+//***************************//
+// Seed The Pretend Database //
+//***************************//
 
-// seed our pretend database
-let links = [
-  {_id: 1, title: "Google", url: "https://google.com"},
-  {_id: 2, title: "XKCD", url: "xkcd.com"},
-  {_id: 3, title: "GitHub", url: "github.com"},
-  {_id: 4, title: "Yahoo", url: "yahoo.com"},
-  {_id: 5, title: "React", url: "https://facebook.github.io/react"},
-  {_id: 6, title: "GraphQL", url: "http://graphql.org"}
+let instructors = [
+  {id: 13, firstName: "Cade", lastName: "Nichols", age: 2, gender: "male"},
+  {id: 42, firstName: "Samer", lastName: "Buna", age: 7, gender: "male"}
 ];
 
+let students = [
+  {id: 7, firstName: "Nicholas", lastName: "Neumann-Chun", age: 126, gender: "male", level: 1},
+  {id: 9, firstName: "Sarah", lastName: "Lyon", age: 125, gender: "female", level: 3}
+];
 
-let linkType = new GraphQLObjectType({
-  name: 'Links',
+let LEVELS_ENUM = ["freshman", "sophomore", "junior", "senior"];
+
+let courses = [
+  {id: 101, name: "Skydiving", instructor: 13},
+  {id: 102, name: "ReactCamp", instructor: 42}
+];
+
+let grades = [
+  {id: Math.random(), student: 7, course: 101, grade: "F"},
+  {id: Math.random(), student: 7, course: 102, grade: "C"},
+  {id: Math.random(), student: 9, course: 101, grade: "B"},
+  {id: Math.random(), student: 9, course: 102, grade: "A"}
+];
+
+Array.prototype.findById = function(id) {
+  for (let i = 0; i < this.length; ++i) {
+    if (this[i].id === id) return this[i];
+  }
+  return null;
+}
+
+//**********************//
+// New Type Definitions //
+//**********************//
+
+let instructorType = new GraphQLObjectType({
+  name: 'Instructor',
   fields: () => ({
-    _id: { type: new GraphQLNonNull(GraphQLID) },
-    title: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    firstName: { type: GraphQLString },
+    lastName: { type: GraphQLString },
+    age: { type: GraphQLInt },
+    gender: { type: GraphQLString }
+  })
+});
+
+let studentType = new GraphQLObjectType({
+  name: 'Student',
+  fields: () => ({
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    firstName: { type: GraphQLString },
+    lastName: { type: GraphQLString },
+    age: { type: GraphQLInt },
+    gender: { type: GraphQLString },
+    level: {
       type: GraphQLString,
-      args: {
-        upcase: {type: GraphQLBoolean}
-      },
-      resolve: (obj, {upcase}) => upcase ? obj.title.toUpperCase() : obj.title
-    },
-    url: {
-      type: GraphQLString,
-      resolve: obj => {
-        let url = obj.url;
-        return url.startsWith('http') ? url : `http://${url}`
-      }
-    },
-    safe: {
-      type: GraphQLBoolean,
-      resolve: obj => obj.url.startsWith('https')
+      resolve: ({level}) => LEVELS_ENUM[level - 1]
     }
   })
-})
+});
 
+let courseType = new GraphQLObjectType({
+  name: 'Course',
+  fields: () => ({
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    name: { type: GraphQLString },
+    instructor: {
+      type: new GraphQLNonNull(instructorType),
+      resolve: ({instructor}) => instructors.findById(instructor)
+    }
+  })
+});
 
-let counter = 0;
+let gradeType = new GraphQLObjectType({
+  name: 'Grade',
+  fields: () => ({
+    id: { type: new GraphQLNonNull(GraphQLID) },
+    student: {
+      type: new GraphQLNonNull(studentType),
+      resolve: ({student}) => students.findById(student)
+    },
+    course: {
+      type: new GraphQLNonNull(courseType),
+      resolve: ({course}) => courses.findById(course)
+    },
+    grade: { type: GraphQLString }
+  })
+});
+
+//***************************//
+// GraphQL Schema Definition //
+//***************************//
+
 let schema = new GraphQLSchema({
-  
   // top level fields
   query: new GraphQLObjectType({
     name: 'Query',
     fields: () => ({
-      counter: {
-        type: GraphQLInt,
-        resolve: () => counter
+      
+      allInstructors: {
+        type: new GraphQLList( instructorType ),
+        resolve: () => instructors
       },
 
-      square: {
-        type: GraphQLInt,
-        args: {
-          n: {type: GraphQLInt}
-        },
-        resolve: (_, {n}) => n * n
+      allStudents: {
+        type: new GraphQLList( studentType ),
+        resolve: () => students
       },
 
-      answer: {
-        type: new GraphQLNonNull(GraphQLInt),
-        resolve: () => 42
+      allCourses: {
+        type: new GraphQLList( courseType ),
+        resolve: () => courses
       },
 
-      links: {
-        type: new GraphQLList(linkType),
-        args: {
-          first: {type: new GraphQLNonNull(GraphQLInt)}
-        },
-        resolve: (_, {first}) => links.slice(0, first)
-      },
-
-      allLinks: {
-        type: new GraphQLList(linkType),
-        resolve: () => links
+      allGrades: {
+        type: new GraphQLList( gradeType ),
+        resolve: () => grades
       }
-    })
-  }),
 
-  // mutation (writes)
-  mutation: new GraphQLObjectType({
-    name: 'Mutation',
-    fields: () => ({
-      incrementCounter: {
-        type: GraphQLInt,
-        args: {
-          delta: {type: GraphQLInt}
-        },
-        resolve: (_, {delta}) => counter += delta
-      },
-
-      createLink: {
-        type: linkType,
-        args: {
-          title: {type: GraphQLString},
-          url: {type: GraphQLString}
-        },
-        resolve: (_, {title, url}) => {
-          var newLink = {id: Date.now(), title: title, url: url}
-          links.push(newLink);
-          return newLink;
-        }
-      }
 
     })
   })
+
 });
 
-
 export default schema;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
