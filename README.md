@@ -8,4 +8,23 @@ This is really all about GraphQL, and hence the schema defined in `data/schema.j
 - then `babel-node --presets es2015 app.js`
 - finally, go to `http://localhost:3000/graphql`
 
-This will allow you to use GraphQL to query a simple dataset consisting of students, instructors, courses, and grades.
+This will allow you to use GraphQL to query a simple dataset consisting of students, instructors, courses, and grades.  For example, try
+
+```
+{
+  students(filter: "Nicholas") {
+    fullName
+    level
+    GPA
+    grades {
+      course {
+        name
+        instructor {
+          fullName
+        }
+      }
+      grade
+    }
+  }
+}
+```
