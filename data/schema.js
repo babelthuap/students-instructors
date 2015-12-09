@@ -40,9 +40,13 @@ let grades = [
 
 let GRADES_ENUM = ["F", "D", "C", "B", "A"];
 
+//***************************//
+// Methods to Query Database //
+//***************************//
+
 Array.prototype.findOneByPropValue = function(prop, value) {
   for (let i = 0; i < this.length; ++i) {
-    if (this[i][prop] === value) return this[i];
+    if (this[i][prop] == value) return this[i];
   }
   console.error('Failed to find', prop + ': ' + value, 'in', this); // DEBUG
   return null;
@@ -51,7 +55,7 @@ Array.prototype.findOneByPropValue = function(prop, value) {
 Array.prototype.findAllByPropValue = function(prop, value) {
   let results = [];
   for (let i = 0; i < this.length; ++i) {
-    if (this[i][prop] === value) {
+    if (this[i][prop] == value) {
       results.push(this[i]);
     }
   }
@@ -70,7 +74,7 @@ let instructorType = new GraphQLObjectType({
     lastName: { type: GraphQLString },
     fullName: {
       type: GraphQLString,
-      resolve: ({firstName, lastName}) => `${firstName} ${lastName}`
+      resolve: ({firstName, lastName}) => `Professor ${firstName} ${lastName}`
     },
     age: { type: GraphQLInt },
     gender: { type: GraphQLString }
@@ -143,33 +147,50 @@ let gradeType = new GraphQLObjectType({
 // GraphQL Schema Definition //
 //***************************//
 
+function filterCollection(collection, filter, filterBy, defaultFilter) {
+  if (filter) {
+    if (!filterBy) filterBy = defaultFilter;
+    if (!isNaN(Number(filter))) filter = Number(filter); // convert number input
+    return collection.findAllByPropValue(filterBy, filter);
+  } else {
+    return collection;
+  }
+}
+
 let schema = new GraphQLSchema({
   // top level fields
   query: new GraphQLObjectType({
     name: 'Query',
     fields: () => ({
       
-      allInstructors: {
+      instructors: {
         type: new GraphQLList(instructorType),
-        resolve: () => instructors
+        args: {
+          filter: { type: GraphQLString },
+          filterBy: { type: GraphQLString }
+        },
+        resolve: (_, {filter, filterBy}) => filterCollection(instructors, filter, filterBy, 'firstName')
       },
 
-      instructor: {
-        type: instructorType,
-        resolve: () => instructors[0]
-      },
-
-      allStudents: {
+      students: {
         type: new GraphQLList(studentType),
-        resolve: () => students
+        args: {
+          filter: { type: GraphQLString },
+          filterBy: { type: GraphQLString }
+        },
+        resolve: (_, {filter, filterBy}) => filterCollection(students, filter, filterBy, 'firstName')
       },
 
-      allCourses: {
+      courses: {
         type: new GraphQLList(courseType),
-        resolve: () => courses
+        args: {
+          filter: { type: GraphQLString },
+          filterBy: { type: GraphQLString }
+        },
+        resolve: (_, {filter, filterBy}) => filterCollection(courses, filter, filterBy, 'name')
       },
 
-      allGrades: {
+      grades: {
         type: new GraphQLList(gradeType),
         resolve: () => grades
       }
@@ -177,7 +198,32 @@ let schema = new GraphQLSchema({
 
     })
   })
-
 });
 
 export default schema;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
