@@ -47,7 +47,6 @@ Array.prototype.findOneByPropValue = function(prop, value) {
   for (let i = 0; i < this.length; ++i) {
     if (this[i][prop] == value) return this[i];
   }
-  console.error('Failed to find', prop + ': ' + value, 'in', this); // DEBUG
   return null;
 }
 
@@ -127,6 +126,13 @@ let courseType = new GraphQLObjectType({
     instructor: {
       type: new GraphQLNonNull(instructorType),
       resolve: ({instructor}) => instructors.findOneByPropValue('id', instructor)
+    },
+    students: {
+      type: new GraphQLList(studentType),
+      resolve: obj => {
+        let studentList = [...obj.students];
+        return studentList.map(studentId => students.findOneByPropValue('id', studentId));
+      }
     }
   })
 });
@@ -202,35 +208,8 @@ let schema = new GraphQLSchema({
         resolve: () => grades
       }
 
-
     })
   })
 });
 
 export default schema;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
