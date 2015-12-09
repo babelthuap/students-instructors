@@ -31,17 +31,30 @@ let courses = [
 ];
 
 let grades = [
-  {id: Math.random(), student: 7, course: 101, grade: "F"},
-  {id: Math.random(), student: 7, course: 102, grade: "C"},
-  {id: Math.random(), student: 9, course: 101, grade: "B"},
-  {id: Math.random(), student: 9, course: 102, grade: "A"}
+  {id: Math.random(), student: 7, course: 101, grade: 0},
+  {id: Math.random(), student: 7, course: 102, grade: 2},
+  {id: Math.random(), student: 9, course: 101, grade: 3},
+  {id: Math.random(), student: 9, course: 102, grade: 4}
 ];
 
-Array.prototype.findById = function(id) {
+let GRADES_ENUM = ["F", "D", "C", "B", "A"];
+
+Array.prototype.findOneByPropValue = function(prop, value) {
   for (let i = 0; i < this.length; ++i) {
-    if (this[i].id === id) return this[i];
+    if (this[i][prop] === value) return this[i];
   }
+  console.error('Failed to find', prop + ': ' + value, 'in', this); // DEBUG
   return null;
+}
+
+Array.prototype.findAllByPropValue = function(prop, value) {
+  let results = [];
+  for (let i = 0; i < this.length; ++i) {
+    if (this[i][prop] === value) {
+      results.push(this[i]);
+    }
+  }
+  return results;
 }
 
 //**********************//
@@ -54,6 +67,10 @@ let instructorType = new GraphQLObjectType({
     id: { type: new GraphQLNonNull(GraphQLID) },
     firstName: { type: GraphQLString },
     lastName: { type: GraphQLString },
+    fullName: {
+      type: GraphQLString,
+      resolve: ({firstName, lastName}) => `${firstName} ${lastName}`
+    },
     age: { type: GraphQLInt },
     gender: { type: GraphQLString }
   })
@@ -65,12 +82,24 @@ let studentType = new GraphQLObjectType({
     id: { type: new GraphQLNonNull(GraphQLID) },
     firstName: { type: GraphQLString },
     lastName: { type: GraphQLString },
+    fullName: {
+      type: GraphQLString,
+      resolve: ({firstName, lastName}) => `${firstName} ${lastName}`
+    },
     age: { type: GraphQLInt },
     gender: { type: GraphQLString },
     level: {
       type: GraphQLString,
       resolve: ({level}) => LEVELS_ENUM[level - 1]
-    }
+    },
+    grades: {
+      type: new GraphQLList(gradeType),
+      resolve: ({id}) => grades.findAllByPropValue('student', id)
+    },
+    // GPA: {
+    //   type: GraphQLInt,
+    //   resolve: ({id}) => 
+    // }
   })
 });
 
@@ -81,7 +110,7 @@ let courseType = new GraphQLObjectType({
     name: { type: GraphQLString },
     instructor: {
       type: new GraphQLNonNull(instructorType),
-      resolve: ({instructor}) => instructors.findById(instructor)
+      resolve: ({instructor}) => instructors.findOneByPropValue('id', instructor)
     }
   })
 });
@@ -92,13 +121,16 @@ let gradeType = new GraphQLObjectType({
     id: { type: new GraphQLNonNull(GraphQLID) },
     student: {
       type: new GraphQLNonNull(studentType),
-      resolve: ({student}) => students.findById(student)
+      resolve: ({student}) => students.findOneByPropValue('id', student)
     },
     course: {
       type: new GraphQLNonNull(courseType),
-      resolve: ({course}) => courses.findById(course)
+      resolve: ({course}) => courses.findOneByPropValue('id', course)
     },
-    grade: { type: GraphQLString }
+    grade: {
+      type: GraphQLString,
+      resolve: ({grade}) => GRADES_ENUM[grade]
+    }
   })
 });
 
@@ -113,22 +145,27 @@ let schema = new GraphQLSchema({
     fields: () => ({
       
       allInstructors: {
-        type: new GraphQLList( instructorType ),
+        type: new GraphQLList(instructorType),
         resolve: () => instructors
       },
 
+      instructor: {
+        type: instructorType,
+        resolve: () => instructors[0]
+      },
+
       allStudents: {
-        type: new GraphQLList( studentType ),
+        type: new GraphQLList(studentType),
         resolve: () => students
       },
 
       allCourses: {
-        type: new GraphQLList( courseType ),
+        type: new GraphQLList(courseType),
         resolve: () => courses
       },
 
       allGrades: {
-        type: new GraphQLList( gradeType ),
+        type: new GraphQLList(gradeType),
         resolve: () => grades
       }
 
