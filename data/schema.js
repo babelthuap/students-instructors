@@ -2,6 +2,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLInt,
+  GraphQLFloat,
   GraphQLString,
   GraphQLBoolean,
   GraphQLList,
@@ -96,10 +97,14 @@ let studentType = new GraphQLObjectType({
       type: new GraphQLList(gradeType),
       resolve: ({id}) => grades.findAllByPropValue('student', id)
     },
-    // GPA: {
-    //   type: GraphQLInt,
-    //   resolve: ({id}) => 
-    // }
+    GPA: {
+      type: GraphQLFloat,
+      resolve: ({id}) => {
+        let nums = grades.findAllByPropValue('student', id).map(course => course.grade);
+        let GPA = nums.reduce((total, x) => total + x, 0) / nums.length;
+        return Number( GPA.toFixed(2) );
+      }
+    }
   })
 });
 
