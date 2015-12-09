@@ -5,8 +5,6 @@ import logger from 'morgan';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 
-import routes from './routes/index';
-
 var app = express();
 
 // view engine setup
@@ -20,8 +18,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', routes);
 
 
 // mount a GraphQL endpoint (needs a schema)
@@ -66,4 +62,4 @@ app.use(function(err, req, res, next) {
 });
 
 
-module.exports = app;
+app.listen(3000);
