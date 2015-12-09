@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": false,
   "scripts": {
+    "setup": "npm install && npm install -g babel-cli",
     "start": "babel-node --presets es2015 app.js"
   },
   "engines": {
